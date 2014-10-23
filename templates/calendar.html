@@ -1,21 +1,41 @@
-<!doctype html>
-<html>
+<!DOCTYPE html>
+<html lang="en">
   <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">    
     <link href="/css/style.css" rel="stylesheet" type="text/css">
     <link href="http://fonts.googleapis.com/css?family=Coming+Soon:regular" rel="stylesheet" type="text/css">
   </head>
   <body>
-    <h1>{{calendar.year}}</h1>
-    <table>
-      {%for month, days in calendar.dates().iteritems()%}
-      <tr>
-        <td><b>{{month}}:</b></td> 
-        {% for day in days %}
-          <td>{{day.date.day}}</td>
-        {%endfor%}
-      </tr>
-      {%endfor%}
-    </table>      
+    <div class="container">
+      <h1>{{calendar.year}}</h1>
+      <table class="table table-bordered">
+        <tbody>
+        {%for month, days in calendar.dates().iteritems()%}
+        <tr>
+          <td><b>{{month}}:</b></td> 
+        </tr>
+        <tr>
+          {% for day in days %}
+            <td class="weekday-{{day.weekday}}">
+              <span class="day">{{day.date.day}}</span>
+              {% if day.weekday == 1 %}
+                <i class="weeknumber">{{ day.weeknumber}}</i>
+              {% endif %}
+              <div class=events>
+              {% for event in day.events %}
+                <div data-icaluid="{{event.iCalUID}}" >
+                  <b title="{{event.summary|e}}">x{{event.colorId}}</b>
+                </div>
+              {%endfor%}
+              </div>
 
+            </td>
+          {%endfor%}
+        </tr>
+        {%endfor%}
+        </tbody>
+      </table>      
+    </div>
   </body>
 </html>

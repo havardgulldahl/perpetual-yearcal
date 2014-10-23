@@ -1,0 +1,22 @@
+/* style.css */
+
+b.weeknumber {
+	font-size: xx-small;
+}
+span.day {
+	font-size: xx-small;
+}
+
+.weekday-6, .weekday-7 {
+
+	background: #eee;
+}
+
+#calendar td.weekday {
+	padding: 4px 4px;
+	min-width: 50px;
+	max-width: 50px;
+	height: 96px;
+	max-height: 116px;
+	overflow: overlay; /* hidden, overlay, scroll, visible */
+}

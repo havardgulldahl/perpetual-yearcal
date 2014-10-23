@@ -35,6 +35,9 @@ from google.appengine.ext import webapp
 from oauth2client.appengine import OAuth2DecoratorFromClientSecrets
 from google.appengine.api import memcache
 
+# our own stuff
+from models import Color
+
 JINJA_ENVIRONMENT = jinja2.Environment(
     loader=jinja2.FileSystemLoader(os.path.dirname(__file__)),
     extensions=['jinja2.ext.autoescape'],
@@ -73,7 +76,7 @@ class YearCalendar(calendar.Calendar):
     def __init__(self, year, events, firstweekday=None):
         super(YearCalendar, self).__init__(firstweekday=firstweekday or 0) # 0 == Monday
         self.year = year
-        logging.info('eents:%s', events)
+        # logging.info('eents:%s', events)
         _e = []
         for e in events:
             eventdate = parse_date(e['start'])
@@ -113,32 +116,57 @@ class YearCalendar(calendar.Calendar):
         return evts
 
 class CalListHandler(webapp2.RequestHandler):
-  @decorator.oauth_aware
-  def get(self):
-    if decorator.has_credentials():
-        cal_list = service.calendarList().list().execute(http=decorator.http())
-        self.response.write(render_response('index.html', calendars=list([c for c in cal_list['items']])))
-    else:
-        url = decorator.authorize_url()
-        self.response.write(render_response('index.html', calendars=[], authorize_url=url))  	
+    @decorator.oauth_aware
+    def get(self):
+        if decorator.has_credentials():
+            cal_list = service.calendarList().list().execute(http=decorator.http())
+            self.response.write(render_response('index.html', calendars=list([c for c in cal_list['items']])))
+        else:
+            url = decorator.authorize_url()
+            self.response.write(render_response('index.html', calendars=[], authorize_url=url))  	
 
 class CalHandler(webapp2.RequestHandler):
-  @decorator.oauth_aware
-  def get(self, cal_id, **kwargs):
-    if decorator.has_credentials():
-        # get keywords or default values
-        year = kwargs.get('year', datetime.datetime.now().year)
-        fields = kwargs.get('fields', 'description,items(colorId,creator,description,end,iCalUID,id,location,start,status,summary),nextPageToken,summary')
-        cal_events = service.events().list(calendarId=cal_id, 
-                                           singleEvents=True,
-                                           fields=fields, 
-                                           orderBy='startTime').execute(http=decorator.http())
-        
-        yc = YearCalendar(year, cal_events['items'])
-        self.response.write(render_response('calendar.html', calendar=yc))
-    else:
-        url = decorator.authorize_url()
-        self.response.write(render_response('index.html', calendars=[], authorize_url=url))   
+    @decorator.oauth_aware
+    def get(self, cal_id, **kwargs):
+        if decorator.has_credentials():
+            # get keywords or default values
+            year = kwargs.get('year', datetime.datetime.now().year)
+            fields = kwargs.get('fields', 'description,items(colorId,creator,description,end,iCalUID,id,location,start,status,summary),nextPageToken,summary')
+            cal_events = service.events().list(calendarId=cal_id, 
+                                               singleEvents=True,
+                                               fields=fields, 
+                                               orderBy='startTime').execute(http=decorator.http())
+            
+            yc = YearCalendar(year, cal_events['items'])
+            self.response.write(render_response('calendar.html', calendar=yc))
+        else:
+            url = decorator.authorize_url()
+            self.response.write(render_response('index.html', calendars=[], authorize_url=url))   
+
+class GetColorsHandler(webapp2.RequestHandler):
+    @decorator.oauth_aware
+    def get(self):
+        if decorator.has_credentials():
+            colors = service.colors().get().execute(http=decorator.http())
+            logging.info(colors)
+            for z in ('calendar', 'event'):
+                for colId, col in colors[z].items():
+                    mycol = Color.get_or_insert('%s#%s' % (z, colId), colorId=colId, 
+                                                                      category=z,
+                                                                      **col)
+            return webapp2.redirect_to('colors')
+        else:
+            url = decorator.authorize_url()
+            self.response.write(render_response('index.html', calendars=[], authorize_url=url))     
+
+class ColorsHandler(webapp2.RequestHandler):
+    def get(self):
+        self.response.write(render_response('colors.html', colors=Color.query()))     
+
+class ColorsCSSHandler(webapp2.RequestHandler):
+    def get(self):
+        self.response.content_type = 'text/css'
+        self.response.write(render_response('colors.css', colors=Color.query()))     
 
 class MainHandler(webapp2.RequestHandler):
     def get(self):
@@ -148,6 +176,9 @@ app = webapp2.WSGIApplication([
     ('/', MainHandler),
     ('/cals', CalListHandler),
     (r'/cal/([^\s]+)', CalHandler),
+    ('/getcolors', GetColorsHandler),
+    ('/colors', ColorsHandler, 'colors'),
+    ('/colors.css', ColorsCSSHandler, 'colors-css'),
     (decorator.callback_path, decorator.callback_handler()),
 
 ], debug=True)

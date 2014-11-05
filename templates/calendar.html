@@ -3,39 +3,42 @@
   <head>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">    
-    <link href="/css/style.css" rel="stylesheet" type="text/css">
+    <link href="/static/style.css" rel="stylesheet" type="text/css">
+    <link href="/colors.css" rel="stylesheet" type="text/css">
     <link href="http://fonts.googleapis.com/css?family=Coming+Soon:regular" rel="stylesheet" type="text/css">
   </head>
   <body>
-    <div class="container">
+    <div classx="container">
       <h1>{{calendar.year}}</h1>
-      <table class="table table-bordered">
-        <tbody>
+      <div style="display:table" classx="table table-bordered" id=calendar>
+        <div>
         {%for month, days in calendar.dates().iteritems()%}
-        <tr>
-          <td><b>{{month}}:</b></td> 
-        </tr>
-        <tr>
+        <div style="display:table-row">
+          <div style="display:table-cell"><b>{{month}}:</b></div>
+        </div>
+        <div style="display:table-row">
           {% for day in days %}
-            <td class="weekday-{{day.weekday}}">
-              <span class="day">{{day.date.day}}</span>
-              {% if day.weekday == 1 %}
-                <i class="weeknumber">{{ day.weeknumber}}</i>
-              {% endif %}
+            <div style="display:table-cell" class="weekday weekday-{{day.weekday}}">
+              <div class=numbering>
+                <span class="day">{{day.date.day}}</span>
+                {% if day.weekday == 1 %}
+                  <b class="weeknumber badge" style="font-size: xx-small;">{{day.weeknumber}}</b>
+                {% endif %}
+              </div>
               <div class=events>
               {% for event in day.events %}
-                <div data-icaluid="{{event.iCalUID}}" >
-                  <b title="{{event.summary|e}}">x{{event.colorId}}</b>
+                <div data-icaluid="{{event.items.iCalUID}}" class="event color-event-{{event.items.colorId|default('default')}} duration-{{event.days}}" style="width: {{event.days}}00%;">
+                  <span class="title" title="{{event.items.summary|e}}">{{event.slug}}</span>
                 </div>
               {%endfor%}
               </div>
 
-            </td>
+            </div>
           {%endfor%}
-        </tr>
+        </div>
         {%endfor%}
-        </tbody>
-      </table>      
+        </div>
+      </div>      
     </div>
   </body>
 </html>

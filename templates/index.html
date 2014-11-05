@@ -1,0 +1,26 @@
+<!doctype html>
+<html>
+  <head>
+    <link href="/static/style.css" rel="stylesheet" type="text/css">
+    <link href="http://fonts.googleapis.com/css?family=Coming+Soon:regular" rel="stylesheet" type="text/css">
+  </head>
+  <body>
+    {% if calendars|length == 0 %}
+      {% if authorize_url %}
+      <b>not authorized yet</b>
+        <a class="title" title="Grant read access to your tasks" href="{{ authorize_url }}">Grant Access</a>
+      {% else %}
+        no calendars found
+        <a class="title" title="Add more tasks in Gmail" href="http://mail.google.com/">Add More Tasks</a>
+      {% endif %}
+    {% endif %}
+    <ul id="calendars">
+      {% for cal in calendars %}
+      <li class="{{ cal.status }}">
+
+        <a class="title" href="/cal/{{ cal.id }}" title="{{ cal.id }}">{{ cal.summary }}</a>
+      </li>
+      {% endfor %}
+    </ul>
+  </body>
+</html>

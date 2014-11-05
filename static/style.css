@@ -7,16 +7,31 @@ span.day {
 	font-size: xx-small;
 }
 
-.weekday-6, .weekday-7 {
-
-	background: #eee;
+#calendar {
+	table-layout: fixed;
 }
 
-#calendar td.weekday {
-	padding: 4px 4px;
+.weekday-6, .weekday-7 {
+	/* saturday and sunday */
+	background: #eee;
+	z-index: 0;
+}
+
+#calendar .weekday {
+	border: 1px solid #ccc;
+	padding: 4px 1px;
 	min-width: 50px;
 	max-width: 50px;
 	height: 96px;
 	max-height: 116px;
-	overflow: overlay; /* hidden, overlay, scroll, visible */
+	overflow: visible; /* hidden, overlay, scroll, visible */
+}
+
+.event {
+	z-index: 10;
+	width: 50px;
+}
+
+.event .title {
+	font-size: 60%;
 }

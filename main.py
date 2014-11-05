@@ -66,10 +66,25 @@ def parse_date(d):
 
 class Date(object):
     def __init__(self, date, events):
-        self.date = date
+        self.date = date #datetime.datetime
         self.month = date.month
         self.year, self.weeknumber, self.weekday = date.isocalendar() # Return a 3-tuple, (ISO year, ISO week number, ISO weekday).
-        self.events = events
+        self.events = events # list
+
+class Event(object):
+    "High level access to the dict returned from gcal"
+    def __init__(self, gcaldict): # parse a dict from gcal
+        # logging.info('Event from %s', gcaldict)
+        self.startdate = parse_date(gcaldict['start']) # get datetime.datetime
+        self.enddate = parse_date(gcaldict['end']) # get datetime.datetime
+        self.days = (self.enddate-self.startdate).days # integer
+        self.items = gcaldict
+        self.slug = self.slugify(gcaldict['summary'])
+    def slugify(self, s):
+        SLUGLENGTH=10
+        if len(s) < SLUGLENGTH: 
+            return s
+        return u'%s..' % s[:SLUGLENGTH]
 
 class YearCalendar(calendar.Calendar):
     "Super Class of calendar.Calendar to display a year with events"
@@ -79,20 +94,17 @@ class YearCalendar(calendar.Calendar):
         # logging.info('eents:%s', events)
         _e = []
         for e in events:
-            eventdate = parse_date(e['start'])
-            _e.append( (eventdate, e) )
-            eventend = parse_date(e['end'])
-            oneday = datetime.timedelta(days=1)
-            while eventdate+oneday < eventend: # this events spans multiple days, expand it
-                eventdate = eventdate+oneday
-                _e.append( (eventdate, e) )
+            E = Event(e)
+            _e.append( (E.startdate, E) )
         self.events = _e
+
     def iterdates(self):
         "iterate over all dates"
         jan1 = datetime.date(self.year, 1, 1)
         for xd in range(0, 366):
             _d = jan1+datetime.timedelta(days=xd)
             yield Date(_d, self.get_events(_d))
+
     def dates(self):
         "return all dates as a list"
         _all = {}
@@ -104,7 +116,6 @@ class YearCalendar(calendar.Calendar):
             except KeyError:
                 _all[d.month] = [d,]
         return _all
-
 
     def get_events(self, date):
         "return a list of all events for a specific datetime.date"

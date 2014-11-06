@@ -1,5 +1,13 @@
 /* style.css */
 
+.trow {
+	display: table-row;
+}
+
+.tcell {
+	display: table-cell;
+}
+
 b.weeknumber {
 	font-size: xx-small;
 }
@@ -8,6 +16,7 @@ span.day {
 }
 
 #calendar {
+	display: table;
 	table-layout: fixed;
 }
 
@@ -27,9 +36,16 @@ span.day {
 	overflow: visible; /* hidden, overlay, scroll, visible */
 }
 
+.events {
+	display:flex; 
+	flex-direction: column-reverse;
+
+}
+
 .event {
 	z-index: 10;
 	width: 50px;
+	flex: auto;
 }
 
 .event .title {

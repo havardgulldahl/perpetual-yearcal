@@ -77,11 +77,12 @@ class Event(object):
         # logging.info('Event from %s', gcaldict)
         self.startdate = parse_date(gcaldict['start']) # get datetime.datetime
         self.enddate = parse_date(gcaldict['end']) # get datetime.datetime
-        self.days = (self.enddate-self.startdate).days # integer
+        self.days = max(1, (self.enddate-self.startdate).days) # integer, at least 1
         self.items = gcaldict
-        self.slug = self.slugify(gcaldict['summary'])
-    def slugify(self, s):
-        SLUGLENGTH=10
+        self.slug = self.slugify(gcaldict['summary'], self.days)
+    def slugify(self, s, span):
+        'Shorten a string according to available span'
+        SLUGLENGTH=int(10*span*0.7)
         if len(s) < SLUGLENGTH: 
             return s
         return u'%s..' % s[:SLUGLENGTH]
@@ -149,7 +150,9 @@ class CalHandler(webapp2.RequestHandler):
                                                orderBy='startTime').execute(http=decorator.http())
             
             yc = YearCalendar(year, cal_events['items'])
-            self.response.write(render_response('calendar.html', calendar=yc))
+            months = ['Null', 'Januar', 'Februar', 'Mars', 'April', 'Mai', 'Juni', 'Juli',
+                      'August', 'September', 'Oktober', 'November', 'Desember']
+            self.response.write(render_response('calendar.html', calendar=yc, months=months))
         else:
             url = decorator.authorize_url()
             self.response.write(render_response('index.html', calendars=[], authorize_url=url))   
@@ -159,7 +162,7 @@ class GetColorsHandler(webapp2.RequestHandler):
     def get(self):
         if decorator.has_credentials():
             colors = service.colors().get().execute(http=decorator.http())
-            logging.info(colors)
+            # logging.info(colors)
             for z in ('calendar', 'event'):
                 for colId, col in colors[z].items():
                     mycol = Color.get_or_insert('%s#%s' % (z, colId), colorId=colId, 

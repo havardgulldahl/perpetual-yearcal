@@ -8,6 +8,7 @@
   </head>
   <body>
     <div class="container">
+      <h1>Colors</h1>
     	{% for c in colors %}
     	<div class=color style="background:{{c.background}}; color:{{c.foreground}}">{{c.category}}:{{c.colorId}}</div>
     	{%endfor%}

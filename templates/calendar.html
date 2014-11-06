@@ -10,32 +10,30 @@
   <body>
     <div classx="container">
       <h1>{{calendar.year}}</h1>
-      <div style="display:table" classx="table table-bordered" id=calendar>
+      <div id=calendar>
         <div>
         {%for month, days in calendar.dates().iteritems()%}
-        <div style="display:table-row">
-          <div style="display:table-cell"><b>{{month}}:</b></div>
-        </div>
-        <div style="display:table-row">
-          {% for day in days %}
-            <div style="display:table-cell" class="weekday weekday-{{day.weekday}}">
-              <div class=numbering>
-                <span class="day">{{day.date.day}}</span>
-                {% if day.weekday == 1 %}
-                  <b class="weeknumber badge" style="font-size: xx-small;">{{day.weeknumber}}</b>
-                {% endif %}
-              </div>
-              <div class=events>
-              {% for event in day.events %}
-                <div data-icaluid="{{event.items.iCalUID}}" class="event color-event-{{event.items.colorId|default('default')}} duration-{{event.days}}" style="width: {{event.days}}00%;">
-                  <span class="title" title="{{event.items.summary|e}}">{{event.slug}}</span>
+          <div class="monthname"><b>{{months[month]}}:</b></div>
+          <div class="trow">
+            {% for day in days %}
+              <div class="tcell weekday weekday-{{day.weekday}}">
+                <div class=numbering>
+                  <span class="day">{{day.date.day}}</span>
+                  {% if day.weekday == 1 %}
+                    <b class="weeknumber badge alert-info" style="font-size: xx-small;">{{day.weeknumber}}</b>
+                  {% endif %}
                 </div>
-              {%endfor%}
-              </div>
+                <div class=events>
+                {% for event in day.events %}
+                  <div data-icaluid="{{event.items.iCalUID}}" class="event color-event-{{event.items.colorId|default('default')}} duration-{{event.days}}" style="width: {{event.days}}00%;">
+                    <span class="title" title="{{event.items.summary|e}}">{{event.slug}}</span>
+                  </div>
+                {%endfor%}
+                </div>
 
-            </div>
-          {%endfor%}
-        </div>
+              </div>
+            {%endfor%}
+          </div>
         {%endfor%}
         </div>
       </div>      

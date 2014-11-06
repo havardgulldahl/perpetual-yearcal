@@ -9,10 +9,10 @@
   </head>
   <body>
     <div classx="container">
-      <h1>{{calendar.year}}</h1>
+      <h1>{{calendar.year}}: {{startdate}}-{{enddate}}</h1>
       <div id=calendar>
         <div>
-        {%for month, days in calendar.dates().iteritems()%}
+        {%for month, days in calendar.dates(startdate, enddate).iteritems()%}
           <div class="monthname"><b>{{months[month]}}:</b></div>
           <div class="trow">
             {% for day in days %}

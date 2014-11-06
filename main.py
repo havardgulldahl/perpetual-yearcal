@@ -91,7 +91,7 @@ class YearCalendar(calendar.Calendar):
     "Super Class of calendar.Calendar to display a year with events"
     def __init__(self, year, events, firstweekday=None):
         super(YearCalendar, self).__init__(firstweekday=firstweekday or 0) # 0 == Monday
-        self.year = year
+        self.year = datetime.datetime.now().year
         # logging.info('eents:%s', events)
         _e = []
         for e in events:
@@ -99,19 +99,35 @@ class YearCalendar(calendar.Calendar):
             _e.append( (E.startdate, E) )
         self.events = _e
 
-    def iterdates(self):
-        "iterate over all dates"
-        jan1 = datetime.date(self.year, 1, 1)
-        for xd in range(0, 366):
-            _d = jan1+datetime.timedelta(days=xd)
-            yield Date(_d, self.get_events(_d))
+    def iterdates(self, startdate=None, enddate=None):
+        """iterate over all dates from startdate to enddate, defaulting to 1jan-31dec of current year. 
 
-    def dates(self):
+        startdate and enddate can be None, datetime.date or dict instance from gcal
+
+        """
+        logging.info('iterdates: start %s - > end %s', startdate, enddate)
+        if startdate is None:
+            startdate = datetime.date(self.year, 1, 1)
+        elif isinstance(startdate, dict):
+            startdate = parse_date(startdate)
+        if enddate is None:
+            enddate = datetime.date(self.year, 12, 31)
+        elif isinstance(enddate, dict):
+            enddate = parse_date(enddate)
+
+        h24 = datetime.timedelta(days=1)
+
+        curdate = startdate
+        while curdate < enddate:
+            yield Date(curdate, self.get_events(curdate))
+            curdate = curdate + h24
+
+    def dates(self, startdate=None, enddate=None):
         "return all dates as a list"
         _all = {}
-        for d in self.iterdates():
-            if d.year != self.year: 
-                continue
+        for d in self.iterdates(startdate, enddate):
+            #if d.year != self.year: 
+            #    continue
             try:
                 _all[d.month].append(d)
             except KeyError:
@@ -139,10 +155,24 @@ class CalListHandler(webapp2.RequestHandler):
 
 class CalHandler(webapp2.RequestHandler):
     @decorator.oauth_aware
-    def get(self, cal_id, **kwargs):
+    def get(self, cal_id, startmonth=None, endmonth=None, **kwargs):
+        logging.info("got args: %s %s %s %s", cal_id, startmonth, endmonth, kwargs)
         if decorator.has_credentials():
             # get keywords or default values
             year = kwargs.get('year', datetime.datetime.now().year)
+            try:
+                startdate = datetime.datetime.strptime(startmonth, '%Y_%m').date() 
+            except ValueError:
+                startdate = None
+            try:
+                _end = datetime.datetime.strptime(endmonth, '-%Y_%m').date()
+                enddate = _end.replace(month=_end.month+1) # stop at first of next month
+            except (ValueError, TypeError):
+                raise
+                if startdate is not None:
+                    enddate = datetime.date(startdate.year, 12, 31)
+                else:
+                    enddate = None
             fields = kwargs.get('fields', 'description,items(colorId,creator,description,end,iCalUID,id,location,start,status,summary),nextPageToken,summary')
             cal_events = service.events().list(calendarId=cal_id, 
                                                singleEvents=True,
@@ -152,7 +182,8 @@ class CalHandler(webapp2.RequestHandler):
             yc = YearCalendar(year, cal_events['items'])
             months = ['Null', 'Januar', 'Februar', 'Mars', 'April', 'Mai', 'Juni', 'Juli',
                       'August', 'September', 'Oktober', 'November', 'Desember']
-            self.response.write(render_response('calendar.html', calendar=yc, months=months))
+            self.response.write(render_response('calendar.html', calendar=yc, months=months,
+                                                startdate=startdate, enddate=enddate))
         else:
             url = decorator.authorize_url()
             self.response.write(render_response('index.html', calendars=[], authorize_url=url))   
@@ -189,7 +220,11 @@ class MainHandler(webapp2.RequestHandler):
 app = webapp2.WSGIApplication([
     ('/', MainHandler),
     ('/cals', CalListHandler),
-    (r'/cal/([^\s]+)', CalHandler),
+
+    #('/cal/<cal_id:[^/]+>/<frommonth:\d{4}_\d{2}>-<tomonth:\d{4}_\d{2}>', CalHandler),
+    #('/cal/<:.*>', CalHandler),
+    (r'/cal/([^/]+)/(\d{4}_\d{2})(-\d{4}_\d{2})?', CalHandler),
+    (r'/cal/([^/]+)', CalHandler),
     ('/getcolors', GetColorsHandler),
     ('/colors', ColorsHandler, 'colors'),
     ('/colors.css', ColorsCSSHandler, 'colors-css'),

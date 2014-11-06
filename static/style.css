@@ -4,6 +4,10 @@
 	display: table-row;
 }
 
+.trow:first-child {
+	border-left: 1px solid #ccc;
+}
+
 .tcell {
 	display: table-cell;
 }
@@ -28,12 +32,18 @@ span.day {
 
 #calendar .weekday {
 	border: 1px solid #ccc;
+	border-width: 1px 1px 1px 0;
 	padding: 4px 1px;
 	min-width: 50px;
 	max-width: 50px;
 	height: 96px;
 	max-height: 116px;
 	overflow: visible; /* hidden, overlay, scroll, visible */
+}
+
+
+.numbering {
+	margin-left: 3px;
 }
 
 .events {

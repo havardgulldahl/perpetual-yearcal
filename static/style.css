@@ -73,11 +73,17 @@ span.day {
 .event {
 	width: 50px;
 	position: relative;
+	overflow: hidden;
 }
 
 .event:nth-child(n+2) {
 	/*select all but first item*/
 	/*top: -3px;*/
+}
+
+.event.duration-1 {
+	/*one day events*/
+	top: 3px;
 }
 
 .event:not(.duration-1) {

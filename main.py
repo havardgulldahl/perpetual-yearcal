@@ -85,10 +85,12 @@ class Event(object):
         self.slug = self.slugify(gcaldict['summary'], self.days)
     def slugify(self, s, span):
         'Shorten a string according to available span'
-        SLUGLENGTH=int(10*span*0.7)
+        SLUGLENGTH=int(30*span)
         if len(s) < SLUGLENGTH: 
             return s
         return u'%s..' % s[:SLUGLENGTH]
+    def multiple_days(self):
+        return self.days > 1
 
 class YearCalendar(calendar.Calendar):
     "Super Class of calendar.Calendar to display a year with events"

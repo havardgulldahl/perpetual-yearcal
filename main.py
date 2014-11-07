@@ -92,7 +92,7 @@ class Event(object):
     def multiple_days(self):
         return self.days > 1
     def multiple_months(self):
-        return self.startdate.month != self.enddate.month
+        return self.startdate.month != self.enddate.month and self.enddate.day > 1
 
 class YearCalendar(calendar.Calendar):
     "Super Class of calendar.Calendar to display a year with events"

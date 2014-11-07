@@ -6,16 +6,25 @@ body {
 
 }
 
+@media print {
+	.trow,.tcell,#calendar .weekday {
+		page-break-inside: avoid;
+	}
+	.numbering {
+		page-break-after: avoid;
+	}
+}
+
 .trow {
 	display: table-row;
 }
 
-.trow:first-child {
-	border-left: 1px solid #ccc;
-}
-
 .tcell {
 	display: table-cell;
+}
+
+#calendar .tcell:first-child {
+	border-left-width: 1px;
 }
 
 b.weeknumber {
@@ -43,11 +52,13 @@ span.day {
 
 .monthname {
 	font-weight: bolder;
+	page-break-after: avoid;
 }
 
 .yeartitle {
 	font-size: xx-large;
 	text-align: center;
+	page-break-after: avoid;
 }
 
 #calendar .weekday {
@@ -61,7 +72,6 @@ span.day {
 	overflow: visible; /* hidden, overlay, scroll, visible */
 	font-weight: 300;
 }
-
 
 .numbering {
 	margin-left: 3px;

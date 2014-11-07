@@ -24,7 +24,7 @@
 
 # stdlib stuff
 import os.path, logging, httplib2, datetime, calendar
-import collections
+import collections, copy
 
 # third party stuff
 #import dateutil
@@ -91,6 +91,8 @@ class Event(object):
         return u'%s..' % s[:SLUGLENGTH]
     def multiple_days(self):
         return self.days > 1
+    def multiple_months(self):
+        return self.startdate.month != self.enddate.month
 
 class YearCalendar(calendar.Calendar):
     "Super Class of calendar.Calendar to display a year with events"
@@ -102,6 +104,13 @@ class YearCalendar(calendar.Calendar):
         for e in events:
             E = Event(e)
             _e.append( (E.startdate, E) )
+            if E.multiple_months(): 
+                # we need to clone this event and display it next month, too
+                # TODO: handle many monhts, not just next
+                _new_startdate = E.enddate.replace(day=1) # start cloned event at first of enddate month
+                _new_E = copy.deepcopy(E) 
+                _new_E.days = max(1, (_new_E.enddate-_new_startdate).days)
+                _e.append( (_new_startdate, _new_E) )
         self.events = _e
 
     def iterdates(self, startdate=None, enddate=None):

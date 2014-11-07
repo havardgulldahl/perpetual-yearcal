@@ -31,7 +31,7 @@ span.day {
 #calendar {
 	display: table;
 	table-layout: fixed;
-
+	overflow-x: hidden;
 }
 
 .weekday-6, .weekday-7 {
@@ -83,10 +83,11 @@ span.day {
 
 .event.duration-1 {
 	/*one day events*/
-	top: 3px;
+	/*top: 3px;*/
 }
 
 .event:not(.duration-1) {
+	/*multiple day events*/
 	border-width: 1px;
 	border-style: dotted;
 }

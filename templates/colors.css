@@ -2,6 +2,7 @@
 {% for c in colors %}
 .color-{{c.category}}-{{c.colorId}} {
 	background:{{c.background}}; 
+	border-color:{{c.foreground}}; 
 	color:{{c.foreground}};
 }
 {%endfor%}

@@ -68,16 +68,21 @@ span.day {
 }
 
 .events {
-	display:flex; 
-	flex-direction: column-reverse;
-
 }
 
 .event {
-	z-index: 10;
 	width: 50px;
-	flex: auto;
+	position: relative;
+}
 
+.event:nth-child(n+2) {
+	/*select all but first item*/
+	/*top: -3px;*/
+}
+
+.event:not(.duration-1) {
+	border-width: 1px;
+	border-style: dotted;
 }
 
 .event .title {

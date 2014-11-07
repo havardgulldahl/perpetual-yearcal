@@ -120,12 +120,13 @@ class YearCalendar(calendar.Calendar):
 
         """
         logging.info('iterdates: start %s - > end %s', startdate, enddate)
+        _thisyear = datetime.datetime.now()
         if startdate is None:
-            startdate = datetime.date(self.year, 1, 1)
+            startdate = datetime.date(_thisyear, 1, 1)
         elif isinstance(startdate, dict):
             startdate = parse_date(startdate)
         if enddate is None:
-            enddate = datetime.date(self.year, 12, 31)
+            enddate = datetime.date(_thisyear, 12, 31)
         elif isinstance(enddate, dict):
             enddate = parse_date(enddate)
 
@@ -172,20 +173,19 @@ class CalHandler(webapp2.RequestHandler):
         logging.info("got args: %s %s %s %s", cal_id, startmonth, endmonth, kwargs)
         if decorator.has_credentials():
             # get keywords or default values
-            year = kwargs.get('year', datetime.datetime.now().year)
+            _thisyear = datetime.datetime.now().year
             try:
                 startdate = datetime.datetime.strptime(startmonth, '%Y_%m').date() 
-            except ValueError:
-                startdate = None
+            except (TypeError, ValueError):
+                startdate = datetime.date(_thisyear, 1, 1)
             try:
                 _end = datetime.datetime.strptime(endmonth, '-%Y_%m').date()
                 enddate = _end.replace(month=_end.month+1) # stop at first of next month
             except (ValueError, TypeError):
-                raise
                 if startdate is not None:
                     enddate = datetime.date(startdate.year, 12, 31)
                 else:
-                    enddate = None
+                    enddate = datetime.date(_thisyear, 12, 31)
             fields = kwargs.get('fields', 'description,items(colorId,creator,description,end,iCalUID,id,location,start,status,summary),nextPageToken,summary')
             cal_events = service.events().list(calendarId=cal_id, 
                                                singleEvents=True,

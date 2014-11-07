@@ -1,5 +1,11 @@
 /* style.css */
 
+body {
+	font-family: 'Roboto Condensed', sans-serif;
+	-webkit-print-color-adjust: exact; 
+	
+}
+
 .trow {
 	display: table-row;
 }
@@ -14,6 +20,9 @@
 
 b.weeknumber {
 	font-size: xx-small;
+	float: right;
+	margin-right: 7px;
+	margin-top: 3px;
 }
 span.day {
 	font-size: xx-small;
@@ -22,12 +31,14 @@ span.day {
 #calendar {
 	display: table;
 	table-layout: fixed;
+
 }
 
 .weekday-6, .weekday-7 {
 	/* saturday and sunday */
 	background: #eee;
 	z-index: 0;
+
 }
 
 #calendar .weekday {
@@ -39,6 +50,7 @@ span.day {
 	height: 96px;
 	max-height: 116px;
 	overflow: visible; /* hidden, overlay, scroll, visible */
+	font-weight: 300;
 }
 
 
@@ -56,6 +68,7 @@ span.day {
 	z-index: 10;
 	width: 50px;
 	flex: auto;
+
 }
 
 .event .title {

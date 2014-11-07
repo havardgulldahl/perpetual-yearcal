@@ -24,6 +24,7 @@
 
 # stdlib stuff
 import os.path, logging, httplib2, datetime, calendar
+import collections
 
 # third party stuff
 #import dateutil
@@ -70,6 +71,8 @@ class Date(object):
         self.month = date.month
         self.year, self.weeknumber, self.weekday = date.isocalendar() # Return a 3-tuple, (ISO year, ISO week number, ISO weekday).
         self.events = events # list
+        self.yearmonth = self.date.strftime('%Y-%m')
+
 
 class Event(object):
     "High level access to the dict returned from gcal"
@@ -123,15 +126,14 @@ class YearCalendar(calendar.Calendar):
             curdate = curdate + h24
 
     def dates(self, startdate=None, enddate=None):
-        "return all dates as a list"
-        _all = {}
+        "return all dates as a dict"
+        _all = collections.OrderedDict({})
         for d in self.iterdates(startdate, enddate):
-            #if d.year != self.year: 
-            #    continue
+            # d is Date object
             try:
-                _all[d.month].append(d)
+                _all[d.yearmonth].append(d)
             except KeyError:
-                _all[d.month] = [d,]
+                _all[d.yearmonth] = [d,]
         return _all
 
     def get_events(self, date):

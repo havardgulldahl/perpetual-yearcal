@@ -3,7 +3,7 @@
 body {
 	font-family: 'Roboto Condensed', sans-serif;
 	-webkit-print-color-adjust: exact; 
-	
+
 }
 
 .trow {
@@ -39,6 +39,15 @@ span.day {
 	background: #eee;
 	z-index: 0;
 
+}
+
+.monthname {
+	font-weight: bolder;
+}
+
+.yeartitle {
+	font-size: xx-large;
+	text-align: center;
 }
 
 #calendar .weekday {

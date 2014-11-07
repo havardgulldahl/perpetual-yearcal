@@ -7,11 +7,16 @@
     <link href='http://fonts.googleapis.com/css?family=Roboto+Condensed:300,400' rel='stylesheet' type='text/css'>  </head>
   <body>
     <div classx="container">
-      <h1>{{startdate}}-{{enddate}}</h1>
+      <h1>&#128197; {{calendar.id}} <div style="float:right">{{startdate.strftime("%b %Y")}}&#8703;{{enddate.strftime("%b %Y")}}</div></h1>
       <div id=calendar>
         <div>
-        {%for month, days in calendar.dates(startdate, enddate).iteritems()%}
-          <div class="monthname">{{month}}<b>{{months[month]}}:</b></div>
+        {%for yearmonth, days in calendar.dates(startdate, enddate).iteritems()%}
+          {% set year = yearmonth[:4] %}
+          {% set month = yearmonth[5:]|int %}
+          {% if current_year != year %}
+          <div class="yeartitle">{{year}}</div>
+          {% endif %}
+          <div class="monthname">{{months[month]}}</div>
           <div class="trow">
             {% for day in days %}
               <div class="tcell weekday weekday-{{day.weekday}}">
@@ -32,6 +37,7 @@
               </div>
             {%endfor%}
           </div>
+          {% set current_year = year %}
         {%endfor%}
         </div>
       </div>      

@@ -92,9 +92,9 @@ class Event(object):
 
 class YearCalendar(calendar.Calendar):
     "Super Class of calendar.Calendar to display a year with events"
-    def __init__(self, year, events, firstweekday=None):
+    def __init__(self, cal_id, events, firstweekday=None):
         super(YearCalendar, self).__init__(firstweekday=firstweekday or 0) # 0 == Monday
-        self.year = datetime.datetime.now().year
+        self.id = cal_id
         # logging.info('eents:%s', events)
         _e = []
         for e in events:
@@ -181,7 +181,7 @@ class CalHandler(webapp2.RequestHandler):
                                                fields=fields, 
                                                orderBy='startTime').execute(http=decorator.http())
             
-            yc = YearCalendar(year, cal_events['items'])
+            yc = YearCalendar(cal_id, cal_events['items'])
             months = ['Null', 'Januar', 'Februar', 'Mars', 'April', 'Mai', 'Juni', 'Juli',
                       'August', 'September', 'Oktober', 'November', 'Desember']
             self.response.write(render_response('calendar.html', calendar=yc, months=months,

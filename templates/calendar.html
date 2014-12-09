@@ -6,7 +6,7 @@
     <link href="/colors.css" rel="stylesheet" type="text/css">
     <link href='http://fonts.googleapis.com/css?family=Roboto+Condensed:300,400' rel='stylesheet' type='text/css'>  </head>
   <body>
-    <div classx="container">
+    <div>
       <h1>&#128197; {{calendar.id}} <div style="float:right">{{startdate.strftime("%b %Y")}}&#8703;{{enddate.strftime("%b %Y")}}</div></h1>
       <div id=calendar>
         <div>
@@ -39,7 +39,23 @@
           {% set current_year = year %}
         {%endfor%}
         </div>
-      </div>      
+      </div>
+      <hr>
+      <h1>Details</h1>
+      <div id="details">
+          {% for color, events in calendar.by_color(startdate, enddate).iteritems() %}
+          <div class=eventlist style="float:left; width: 10em;">
+
+              {%for e in events %}
+              <dl class="dl-horizontal color-event-{{e.items.colorId|default('default')}}">
+                  <dt>{{e.startdate}}</dt>
+                  <dd>{{e.items.summary|e}}</dd>
+              </dl>
+              {%endfor%}
+          </div>
+          {%endfor%}
+
+      </div> <!-- #details -->
     </div>
   </body>
 </html>

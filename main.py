@@ -77,16 +77,17 @@ class Date(object):
 class Event(object):
     "High level access to the dict returned from gcal"
     def __init__(self, gcaldict): # parse a dict from gcal
-        # logging.info('Event from %s', gcaldict)
+        #logging.info('Event from %s', gcaldict)
         self.startdate = parse_date(gcaldict['start']) # get datetime.datetime
         self.enddate = parse_date(gcaldict['end']) # get datetime.datetime
         self.days = max(1, (self.enddate-self.startdate).days) # integer, at least 1
         self.items = gcaldict
+        self.colorId = gcaldict.get('colorId', None)
         self.slug = self.slugify(gcaldict['summary'], self.days)
     def slugify(self, s, span):
         'Shorten a string according to available span'
         SLUGLENGTH=int(30*span)
-        if len(s) < SLUGLENGTH: 
+        if len(s) < SLUGLENGTH:
             return s
         return u'%s..' % s[:SLUGLENGTH]
     def multiple_days(self):
@@ -104,17 +105,17 @@ class YearCalendar(calendar.Calendar):
         for e in events:
             E = Event(e)
             _e.append( (E.startdate, E) )
-            if E.multiple_months(): 
+            if E.multiple_months():
                 # we need to clone this event and display it next month, too
                 # TODO: handle many monhts, not just next
                 _new_startdate = E.enddate.replace(day=1) # start cloned event at first of enddate month
-                _new_E = copy.deepcopy(E) 
+                _new_E = copy.deepcopy(E)
                 _new_E.days = max(1, (_new_E.enddate-_new_startdate).days)
                 _e.append( (_new_startdate, _new_E) )
         self.events = _e
 
     def iterdates(self, startdate=None, enddate=None):
-        """iterate over all dates from startdate to enddate, defaulting to 1jan-31dec of current year. 
+        """iterate over all dates from startdate to enddate, defaulting to 1jan-31dec of current year.
 
         startdate and enddate can be None, datetime.date or dict instance from gcal
 
@@ -157,6 +158,18 @@ class YearCalendar(calendar.Calendar):
                 evts.append(ev[1])
         return evts
 
+    def by_color(self, startdate=None, enddate=None):
+        "return a dict of all events keyed by color"
+        _r = {}
+        for (evdate, e) in self.events:
+            if startdate < evdate < enddate:
+                try:
+                    _r[e.colorId].append(e)
+                except KeyError:
+                    _r[e.colorId] = [e,]
+        return _r
+
+
 class CalListHandler(webapp2.RequestHandler):
     @decorator.oauth_aware
     def get(self):
@@ -165,17 +178,17 @@ class CalListHandler(webapp2.RequestHandler):
             self.response.write(render_response('index.html', calendars=list([c for c in cal_list['items']])))
         else:
             url = decorator.authorize_url()
-            self.response.write(render_response('index.html', calendars=[], authorize_url=url))  	
+            self.response.write(render_response('index.html', calendars=[], authorize_url=url))
 
 class CalHandler(webapp2.RequestHandler):
     @decorator.oauth_aware
     def get(self, cal_id, startmonth=None, endmonth=None, **kwargs):
-        logging.info("got args: %s %s %s %s", cal_id, startmonth, endmonth, kwargs)
+        #logging.info("got args: %s %s %s %s", cal_id, startmonth, endmonth, kwargs)
         if decorator.has_credentials():
             # get keywords or default values
             _thisyear = datetime.datetime.now().year
             try:
-                startdate = datetime.datetime.strptime(startmonth, '%Y_%m').date() 
+                startdate = datetime.datetime.strptime(startmonth, '%Y_%m').date()
             except (TypeError, ValueError):
                 startdate = datetime.date(_thisyear, 1, 1)
             try:
@@ -187,11 +200,11 @@ class CalHandler(webapp2.RequestHandler):
                 else:
                     enddate = datetime.date(_thisyear, 12, 31)
             fields = kwargs.get('fields', 'description,items(colorId,creator,description,end,iCalUID,id,location,start,status,summary),nextPageToken,summary')
-            cal_events = service.events().list(calendarId=cal_id, 
+            cal_events = service.events().list(calendarId=cal_id,
                                                singleEvents=True,
-                                               fields=fields, 
+                                               fields=fields,
                                                orderBy='startTime').execute(http=decorator.http())
-            
+
             yc = YearCalendar(cal_id, cal_events['items'])
             months = ['Null', 'Januar', 'Februar', 'Mars', 'April', 'Mai', 'Juni', 'Juli',
                       'August', 'September', 'Oktober', 'November', 'Desember']
@@ -199,7 +212,7 @@ class CalHandler(webapp2.RequestHandler):
                                                 startdate=startdate, enddate=enddate))
         else:
             url = decorator.authorize_url()
-            self.response.write(render_response('index.html', calendars=[], authorize_url=url))   
+            self.response.write(render_response('index.html', calendars=[], authorize_url=url))
 
 class GetColorsHandler(webapp2.RequestHandler):
     @decorator.oauth_aware
@@ -209,22 +222,22 @@ class GetColorsHandler(webapp2.RequestHandler):
             # logging.info(colors)
             for z in ('calendar', 'event'):
                 for colId, col in colors[z].items():
-                    mycol = Color.get_or_insert('%s#%s' % (z, colId), colorId=colId, 
+                    mycol = Color.get_or_insert('%s#%s' % (z, colId), colorId=colId,
                                                                       category=z,
                                                                       **col)
             return webapp2.redirect_to('colors')
         else:
             url = decorator.authorize_url()
-            self.response.write(render_response('index.html', calendars=[], authorize_url=url))     
+            self.response.write(render_response('index.html', calendars=[], authorize_url=url))
 
 class ColorsHandler(webapp2.RequestHandler):
     def get(self):
-        self.response.write(render_response('colors.html', colors=Color.query()))     
+        self.response.write(render_response('colors.html', colors=Color.query()))
 
 class ColorsCSSHandler(webapp2.RequestHandler):
     def get(self):
         self.response.content_type = 'text/css'
-        self.response.write(render_response('colors.css', colors=Color.query()))     
+        self.response.write(render_response('colors.css', colors=Color.query()))
 
 class MainHandler(webapp2.RequestHandler):
     def get(self):

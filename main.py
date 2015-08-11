@@ -209,6 +209,9 @@ class CalHandler(webapp2.RequestHandler):
             cal_events = service.events().list(calendarId=cal_id,
                                                singleEvents=True,
                                                fields=fields,
+                                               timeMin=startdate.isoformat(),
+                                               timeMax=(enddate + datetime.timedelta(days=1)).isoformat(),
+                                               maxResults=2500,
                                                orderBy='startTime').execute(http=decorator.http())
             # TODO: use list_next(previous_request=*, previous_response=*) if there are more results pages
             yc = YearCalendar(cal_id, cal_events['items'])

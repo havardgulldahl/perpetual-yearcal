@@ -252,7 +252,8 @@ class ColorsCSSHandler(webapp2.RequestHandler):
 
 class MainHandler(webapp2.RequestHandler):
     def get(self):
-        self.response.write('Hello world!')
+        url = None
+        self.response.write(render_response('index.html', calendars=[], authorize_url=url))
 
 app = webapp2.WSGIApplication([
     ('/', MainHandler),
@@ -267,4 +268,4 @@ app = webapp2.WSGIApplication([
     ('/colors.css', ColorsCSSHandler, 'colors-css'),
     (decorator.callback_path, decorator.callback_handler()),
 
-], debug=True)
+], debug=False)

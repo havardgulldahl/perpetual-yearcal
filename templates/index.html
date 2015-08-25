@@ -2,16 +2,16 @@
 <html>
   <head>
     <link href="/static/style.css" rel="stylesheet" type="text/css">
-    <link href="http://fonts.googleapis.com/css?family=Coming+Soon:regular" rel="stylesheet" type="text/css">
+    <link href="https://fonts.googleapis.com/css?family=Coming+Soon:regular" rel="stylesheet" type="text/css">
   </head>
   <body>
     {% if calendars|length == 0 %}
       {% if authorize_url %}
       <b>not authorized yet</b>
-        <a class="title" title="Grant read access to your tasks" href="{{ authorize_url }}">Grant Access</a>
+        <a class="title" title="Grant read access to your calendars" href="{{ authorize_url }}">Grant Access</a>
       {% else %}
         no calendars found
-        <a class="title" title="Add more tasks in Gmail" href="http://mail.google.com/">Add More Tasks</a>
+        <a class="title" href="/cals">Log in and show calendars</a>
       {% endif %}
     {% endif %}
     <ul id="calendars">

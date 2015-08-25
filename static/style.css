@@ -84,6 +84,7 @@ span.day {
 	width: 50px;
 	position: relative;
 	overflow: hidden;
+	margin-bottom: 1px;
 }
 
 .event:nth-child(n+2) {

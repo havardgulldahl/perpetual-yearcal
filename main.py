@@ -200,11 +200,20 @@ class CalHandler(webapp2.RequestHandler):
                 else:
                     enddate = datetime.date(_thisyear, 12, 31)
             fields = kwargs.get('fields', 'description,items(colorId,creator,description,end,iCalUID,id,location,start,status,summary),nextPageToken,summary')
+            #TODO: only list events from startdate to enddate, using timeMin & timeMax
+            # https://developers.google.com/google-apps/calendar/v3/reference/events/list
+            #   timeMin: string, Lower bound (inclusive) for an event's end time to filter by. Optional. The default is not to filter by end time. Must be an RFC3339 timestamp with mandatory time zone offset, e.g., 2011-06-03T10:00:00-07:00, 2011-06-03T10:00:00Z. Milliseconds may be provided but will be ignored.
+            #   timeMax: string, Upper bound (exclusive) for an event's start time to filter by. Optional. The default is not to filter by start time. Must be an RFC3339 timestamp with mandatory time zone offset, e.g., 2011-06-03T10:00:00-07:00, 2011-06-03T10:00:00Z. Milliseconds may be provided but will be ignored.
+            #TODO: add 'maxResults=2500' to make sure we get as much as we can
+            #   maxResults: integer, Maximum number of events returned on one result page. By default the value is 250 events. The page size can never be larger than 2500 events. Optional.
             cal_events = service.events().list(calendarId=cal_id,
                                                singleEvents=True,
                                                fields=fields,
+                                               timeMin=startdate.isoformat(),
+                                               timeMax=(enddate + datetime.timedelta(days=1)).isoformat(),
+                                               maxResults=2500,
                                                orderBy='startTime').execute(http=decorator.http())
-
+            # TODO: use list_next(previous_request=*, previous_response=*) if there are more results pages
             yc = YearCalendar(cal_id, cal_events['items'])
             months = ['Null', 'Januar', 'Februar', 'Mars', 'April', 'Mai', 'Juni', 'Juli',
                       'August', 'September', 'Oktober', 'November', 'Desember']

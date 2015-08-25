@@ -53,3 +53,15 @@ docs/_build/
 # PyBuilder
 target/
 client_secrets.json
+
+# virtualenv
+^bin/
+^lib/
+^include/
+
+#imports
+^apiclient/
+^httplib2/
+^oauth2client/
+^uritemplate/
+

@@ -29,3 +29,4 @@ class Color(ndb.Model):
   background = ndb.StringProperty()
   colorId = ndb.StringProperty()
   category = ndb.StringProperty() # 'calendar' or 'event'
+  title = ndb.StringProperty()

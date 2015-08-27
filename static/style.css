@@ -77,6 +77,10 @@ span.day {
 	margin-left: 3px;
 }
 
+.page-break {
+  page-break-before: always;
+}
+
 .events {
 }
 

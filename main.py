@@ -61,10 +61,8 @@ def parse_date(d):
     """Parse {u'date': u'2014-10-10'} or {u'dateTime': u'2014-10-10T12:30:00+02:00'} and return datetime"""
     if d.has_key('date'):
         return dateutil.parser.parse(d['date'], fuzzy=True).date()
-        #return datetime.datetime.strptime(d['date'], '%Y-%m-%d').date()
     elif d.has_key('dateTime'):
         return dateutil.parser.parse(d['dateTime'], fuzzy=True).date()
-        #return datetime.datetime.strptime(d['dateTime'].split('+')[0], '%Y-%m-%dT%H:%M:%S').date()
     else:
         return None
 

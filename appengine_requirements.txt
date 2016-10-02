@@ -1,0 +1,4 @@
+# install into vendor lib like this
+# pip install -t vendorlib -r appengine_requirements.txt
+python-dateutil
+

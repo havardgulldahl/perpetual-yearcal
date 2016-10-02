@@ -27,7 +27,8 @@ import os.path, logging, httplib2, datetime, calendar
 import collections, copy
 
 # third party stuff
-#import dateutil
+# install howto in appengine_requirements.txt
+import dateutil.parser
 
 # appengine stuff
 import webapp2, jinja2
@@ -59,9 +60,11 @@ def render_response(template, **context):
 def parse_date(d):
     """Parse {u'date': u'2014-10-10'} or {u'dateTime': u'2014-10-10T12:30:00+02:00'} and return datetime"""
     if d.has_key('date'):
-        return datetime.datetime.strptime(d['date'], '%Y-%m-%d').date()
+        return dateutil.parser.parse(d['date'], fuzzy=True).date()
+        #return datetime.datetime.strptime(d['date'], '%Y-%m-%d').date()
     elif d.has_key('dateTime'):
-        return datetime.datetime.strptime(d['dateTime'].split('+')[0], '%Y-%m-%dT%H:%M:%S').date()
+        return dateutil.parser.parse(d['dateTime'], fuzzy=True).date()
+        #return datetime.datetime.strptime(d['dateTime'].split('+')[0], '%Y-%m-%dT%H:%M:%S').date()
     else:
         return None
 

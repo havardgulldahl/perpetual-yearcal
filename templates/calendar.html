@@ -7,7 +7,7 @@
     <link href='https://fonts.googleapis.com/css?family=Roboto+Condensed:300,400' rel='stylesheet' type='text/css'>  </head>
   <body>
     <div>
-      <h1>&#128197; {{calendar.id}} <div style="float:right">{{startdate.strftime("%b %Y")}}&#8703;{{enddate.strftime("%b %Y")}}</div></h1>
+      <h1>&#128197; {{title}} <div style="float:right">{{startdate.strftime("%b %Y")}}&#8703;{{enddate.strftime("%b %Y")}}</div></h1>
       <div id=calendar>
         <div>
         {%for yearmonth, days in calendar.dates(startdate, enddate).iteritems()%}

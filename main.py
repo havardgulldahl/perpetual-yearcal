@@ -38,7 +38,7 @@ from oauth2client.appengine import OAuth2DecoratorFromClientSecrets
 from google.appengine.api import memcache
 
 # our own stuff
-from models import Color
+from models import Color, CalendarPrettyTitle
 
 JINJA_ENVIRONMENT = jinja2.Environment(
     loader=jinja2.FileSystemLoader(os.path.dirname(__file__)),
@@ -176,6 +176,22 @@ class CalListHandler(webapp2.RequestHandler):
     def get(self):
         if decorator.has_credentials():
             cal_list = service.calendarList().list().execute(http=decorator.http())
+            for c in cal_list['items']:
+                # do we have a pretty title? Store it.
+                #logging.info(c)
+                try:
+                    CPT = CalendarPrettyTitle.get_by_id(c['id'])
+                    if CPT is None:
+                        CPT = CalendarPrettyTitle(cal_id = c['id'],
+                                                  id = c['id'])
+                    if c.has_key('summaryOverride'):
+                        CPT.pretty_title = c['summaryOverride']
+                    elif not c['summary'].startswith('http'): # dont store urls
+                        CPT.pretty_title = c['summary']
+                    CPT.put()
+                except Exception as e:
+                    logging.exception(e)
+
             self.response.write(render_response('index.html', calendars=cal_list['items']))
         else:
             url = decorator.authorize_url()
@@ -217,10 +233,17 @@ class CalHandler(webapp2.RequestHandler):
                                                maxResults=2500,
                                                orderBy='startTime').execute(http=decorator.http())
             # TODO: use list_next(previous_request=*, previous_response=*) if there are more results pages
+            #logging.info(cal_events)
+            # try to get pretty title from db
+            try:
+                pretty_title = CalendarPrettyTitle.get_by_id(cal_id).pretty_title
+            except AttributeError:
+                # no pretty title recorded
+                pretty_title = cal_id
             yc = YearCalendar(cal_id, cal_events['items'])
             months = ['Null', 'Januar', 'Februar', 'Mars', 'April', 'Mai', 'Juni', 'Juli',
                       'August', 'September', 'Oktober', 'November', 'Desember']
-            self.response.write(render_response('calendar.html', calendar=yc, months=months,
+            self.response.write(render_response('calendar.html', title=pretty_title, calendar=yc, months=months,
                                                 startdate=startdate, enddate=enddate))
         else:
             url = decorator.authorize_url()
@@ -231,7 +254,7 @@ class GetColorsHandler(webapp2.RequestHandler):
     def get(self):
         if decorator.has_credentials():
             colors = service.colors().get().execute(http=decorator.http())
-            # logging.info(colors)
+            logging.info(colors)
             for z in ('calendar', 'event'):
                 for colId, col in colors[z].items():
                     mycol = Color.get_or_insert('%s#%s' % (z, colId), colorId=colId,

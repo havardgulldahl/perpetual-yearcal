@@ -30,3 +30,7 @@ class Color(ndb.Model):
   colorId = ndb.StringProperty()
   category = ndb.StringProperty() # 'calendar' or 'event'
   title = ndb.StringProperty()
+
+class CalendarPrettyTitle(ndb.Model):
+  cal_id = ndb.StringProperty()
+  pretty_title = ndb.StringProperty()

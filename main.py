@@ -176,7 +176,7 @@ class CalListHandler(webapp2.RequestHandler):
     def get(self):
         if decorator.has_credentials():
             cal_list = service.calendarList().list().execute(http=decorator.http())
-            self.response.write(render_response('index.html', calendars=list([c for c in cal_list['items']])))
+            self.response.write(render_response('index.html', calendars=cal_list['items']))
         else:
             url = decorator.authorize_url()
             self.response.write(render_response('index.html', calendars=[], authorize_url=url))

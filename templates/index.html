@@ -18,7 +18,7 @@
       {% for cal in calendars %}
       <li class="{{ cal.status }}">
 
-        <a class="title" href="/cal/{{ cal.id }}" title="{{ cal.id }}">{{ cal.summary }}</a>
+        <a class="title" href="/cal/{{ cal.id }}" title="{{ cal.id }}">{{ cal.summaryOverride or cal.summary  }}</a>
       </li>
       {% endfor %}
     </ul>

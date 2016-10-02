@@ -260,7 +260,7 @@ class GetColorsHandler(webapp2.RequestHandler):
                     mycol = Color.get_or_insert('%s#%s' % (z, colId), colorId=colId,
                                                                       category=z,
                                                                       **col)
-            return webapp2.redirect_to('colors')
+            return webapp2.redirect('/colors')
         else:
             url = decorator.authorize_url()
             self.response.write(render_response('index.html', calendars=[], authorize_url=url))

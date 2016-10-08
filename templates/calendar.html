@@ -63,6 +63,10 @@
       </div>
       <hr class="page-break">
       <h1>Details</h1>
+      <button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--accent">
+        Show item list
+      </button>
+
       <div id="details">
           {% for color, events in calendar.by_color(startdate, enddate).iteritems() %}
           <div class=eventlist style="float:left; width: 10em;">

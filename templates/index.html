@@ -8,24 +8,34 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
   </head>
   <body>
-    {% if calendars|length == 0 %}
-      {% if authorize_url %}
-      <b>not authorized yet</b>
-        <a class="title" title="Grant read access to your calendars" href="{{ authorize_url }}">Grant Access</a>
-      {% else %}
-        no calendars found
-        <a class="title" href="/cals">Log in and show calendars</a>
-      {% endif %}
-    {% endif %}
-    <ul id="calendars" class="mdl-list">
-      {% for cal in calendars %}
-      <li class="mdl-list__item {{ cal.status }}">
-        <span class="mdl-list__item-primary-content">
-          <i class="material-icons mdl-list__item-icon">event</i>
-          <a class="title" href="/cal/{{ cal.id }}" title="{{ cal.id }}">{{ cal.summaryOverride or cal.summary  }}</a>
-        </span>
-      </li>
-      {% endfor %}
-    </ul>
+    <div class="mdl-grid">
+      <div class="mdl-cell mdl-cell--stretch">
+        <h1>
+          Perpetual Yearcal
+          <small>A never ending calendar</small>
+        </h1>
+        {% if calendars|length == 0 %}
+          {% if authorize_url %}
+          <b>not authorized yet</b>
+            <a class="title" title="Grant read access to your calendars" href="{{ authorize_url }}">Grant Access</a>
+          {% else %}
+            no calendars found
+            <a class="title" href="/cals">Log in and show calendars</a>
+          {% endif %}
+        {% else %}
+        <ul id="calendars" class="mdl-list">
+          {% for cal in calendars %}
+          <li class="mdl-list__item {{ cal.status }}">
+            <span class="mdl-list__item-primary-content">
+              <i class="material-icons mdl-list__item-icon">event</i>
+              <a class="title" href="/cal/{{ cal.id }}" title="{{ cal.id }}">{{ cal.summaryOverride or cal.summary  }}</a>
+            </span>
+          </li>
+          {% endfor %}
+        </ul>
+        {% endif %}
+      </div> <!-- /class mdl-grid -->
+
+    </div> <!-- /class mdl-cell -->
   </body>
 </html>

@@ -28,7 +28,7 @@ import collections, copy
 
 # third party stuff
 # install howto in appengine_requirements.txt
-import dateutil.parser
+import dateutil.parser, dateutil.relativedelta
 
 # appengine stuff
 import webapp2, jinja2
@@ -65,6 +65,18 @@ def parse_date(d):
         return dateutil.parser.parse(d['dateTime'], fuzzy=True).date()
     else:
         return None
+
+def monthmod(dt, delta):
+    logging.info("monthmod: %r %r", dt, delta)
+    one_month = dateutil.relativedelta.relativedelta(months=1)
+    new = dt + (delta*one_month)
+    return new
+JINJA_ENVIRONMENT.filters['monthmod'] = monthmod
+
+def yearmonth(dt):
+    'filter to format a datetime to "%Y_%m"'
+    return dt.strftime('%Y_%m')
+JINJA_ENVIRONMENT.filters['yearmonth'] = yearmonth
 
 class Date(object):
     def __init__(self, date, events):
@@ -225,13 +237,21 @@ class CalHandler(webapp2.RequestHandler):
             #   maxResults: integer, Maximum number of events returned on one result page. By default the value is 250 events. The page size can never be larger than 2500 events. Optional.
             timeMin_dt = datetime.datetime.combine(startdate, datetime.datetime.min.time())
             timeMax_dt = datetime.datetime.combine(enddate, datetime.datetime.min.time()) + datetime.timedelta(days=1)
-            cal_events = service.events().list(calendarId=cal_id,
-                                               singleEvents=True,
-                                               fields=fields,
-                                               timeMin='%sZ' % timeMin_dt.isoformat(),
-                                               timeMax='%sZ' % timeMax_dt.isoformat(),
-                                               maxResults=2500,
-                                               orderBy='startTime').execute(http=decorator.http())
+            try:
+                cal_events = service.events().list(calendarId=cal_id,
+                                                   singleEvents=True,
+                                                   fields=fields,
+                                                   timeMin='%sZ' % timeMin_dt.isoformat(),
+                                                   timeMax='%sZ' % timeMax_dt.isoformat(),
+                                                   maxResults=2500,
+                                                   orderBy='startTime').execute(http=decorator.http())
+            except AccessTokenRefreshError:
+                # In cases where the access token has expired and cannot be refreshed
+                # (e.g. manual token revoking) redirect the user to the authorization page
+                # to authorize.
+                url = decorator.authorize_url()
+                self.response.write(render_response('index.html', calendars=[], authorize_url=url))
+
             # TODO: use list_next(previous_request=*, previous_response=*) if there are more results pages
             #logging.info(cal_events)
             # try to get pretty title from db

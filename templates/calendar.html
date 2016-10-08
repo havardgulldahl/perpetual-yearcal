@@ -4,19 +4,36 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link href="/static/style.css" rel="stylesheet" type="text/css">
     <link href="/colors.css" rel="stylesheet" type="text/css">
-    <link href='https://fonts.googleapis.com/css?family=Roboto+Condensed:300,400' rel='stylesheet' type='text/css'>  </head>
+    <link href='https://fonts.googleapis.com/css?family=Roboto+Condensed:300,400' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" href="/static/material.min.css">
+    <script src="/static/material.min.js"></script>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+
+  </head>
   <body>
     <div>
       <h1>&#128197; {{title}} <div style="float:right">{{startdate.strftime("%b %Y")}}&#8703;{{enddate.strftime("%b %Y")}}</div></h1>
       <div id=calendar>
         <div>
-        {%for yearmonth, days in calendar.dates(startdate, enddate).iteritems()%}
+          <a class="mdl-button mdl-js-button mdl-button--icon" href="/cal/{{calendar.id}}/{{ startdate|monthmod(-1)|yearmonth }}">
+            <i class="material-icons">add</i>
+          </a>
+          {%for yearmonth, days in calendar.dates(startdate, enddate).iteritems()%}
           {% set year = yearmonth[:4] %}
           {% set month = yearmonth[5:]|int %}
           {% if current_year != year %}
           <div class="yeartitle">{{year}}</div>
           {% endif %}
-          <div class="monthname">{{months[month]}}</div>
+
+          <div class="monthname mdl-chip mdl-chip__deletable">
+            <span class="mdl-chip__text">{{months[month]}}</span>
+            {% if loop.first %}
+            <a type="button" class="mdl-chip__action" href="/cal/{{calendar.id}}/{{ startdate|monthmod(+1)|yearmonth }}"><i class="material-icons">cancel</i></a>
+            {% endif %}
+            {% if loop.last %}
+            <a type="button" class="mdl-chip__action" href="/cal/{{calendar.id}}/{{ startdate|yearmonth}}-{{ enddate|monthmod(-1)|yearmonth }}"><i class="material-icons">cancel</i></a>
+            {% endif %}
+          </div>
           <div class="trow">
             {% for day in days %}
               <div class="tcell weekday weekday-{{day.weekday}}">
@@ -38,6 +55,10 @@
           </div>
           {% set current_year = year %}
         {%endfor%}
+          <a class="mdl-button mdl-js-button mdl-button--icon" href="/cal/{{calendar.id}}/{{ startdate|yearmonth }}-{{ enddate|monthmod(+1)|yearmonth }}">
+            <i class="material-icons">add</i>
+          </a>
+
         </div>
       </div>
       <hr class="page-break">

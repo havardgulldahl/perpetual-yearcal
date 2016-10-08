@@ -2,7 +2,7 @@
 
 body {
 	font-family: 'Roboto Condensed', sans-serif;
-	-webkit-print-color-adjust: exact; 
+	-webkit-print-color-adjust: exact;
 
 }
 
@@ -51,7 +51,7 @@ span.day {
 }
 
 .monthname {
-	font-weight: bolder;
+	/* font-weight: bolder; */
 	page-break-after: avoid;
 }
 

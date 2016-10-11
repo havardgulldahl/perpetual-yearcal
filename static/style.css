@@ -1,9 +1,12 @@
 /* style.css */
 
 body {
-	font-family: 'Roboto Condensed', sans-serif;
 	-webkit-print-color-adjust: exact;
 
+}
+
+body h1 {
+	font-family: 'Roboto Condensed', sans-serif;
 }
 
 @media print {
@@ -41,6 +44,7 @@ span.day {
 	display: table;
 	table-layout: fixed;
 	overflow-x: hidden;
+	font-family: 'Roboto Condensed', sans-serif;
 }
 
 .weekday-6, .weekday-7 {
@@ -88,7 +92,10 @@ span.day {
 	width: 50px;
 	position: relative;
 	overflow: hidden;
-	margin-bottom: 1px;
+	margin-bottom: 0.5px;
+	padding-left: 1px;
+	border-width: 0 0 0 3px;
+	border-style: solid;
 }
 
 .event:nth-child(n+2) {
@@ -103,8 +110,8 @@ span.day {
 
 .event:not(.duration-1) {
 	/*multiple day events*/
-	border-width: 1px;
-	border-style: dotted;
+	border-width: 1px 1px 1px 3px;
+	border-style: dotted dotted dotted double;
 }
 
 .event .title {

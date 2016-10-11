@@ -1,16 +1,15 @@
 /* colors.css */
 {% for c in colors %}
 .color-{{c.category}}-{{c.colorId}} {
-	background:{{c.background}}; 
-	border-color:{{c.foreground}}; 
+	border-color:{{c.background}}; 
+	/*
 	color:{{c.foreground}};
+	background:{{c.background}}; 
+	*/
 }
 {%endfor%}
-.color-event-default {
-	background:lightblue; 
-	color:white;
-}
-.color-calendar-default {
-	background:lightblue; 
-	color:white;
+.color-event-default, .color-calendar-default {
+	background:#dedee6;
+	color:black;
+	border-color: blueviolet;
 }

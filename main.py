@@ -186,8 +186,16 @@ class YearCalendar(calendar.Calendar):
 class CalListHandler(webapp2.RequestHandler):
     @decorator.oauth_aware
     def get(self):
+        def write_auth_view():
+            url = decorator.authorize_url()
+            self.response.write(render_response('index.html', calendars=[], authorize_url=url))
+
         if decorator.has_credentials():
-            cal_list = service.calendarList().list().execute(http=decorator.http())
+            try:
+                cal_list = service.calendarList().list().execute(http=decorator.http())
+            except AccessTokenRefreshError:
+                # credentials have expired, neeed new auth
+                write_auth_view()
             for c in cal_list['items']:
                 # do we have a pretty title? Store it.
                 #logging.info(c)
@@ -206,8 +214,7 @@ class CalListHandler(webapp2.RequestHandler):
 
             self.response.write(render_response('index.html', calendars=cal_list['items']))
         else:
-            url = decorator.authorize_url()
-            self.response.write(render_response('index.html', calendars=[], authorize_url=url))
+            write_auth_view()
 
 class CalHandler(webapp2.RequestHandler):
     @decorator.oauth_aware
@@ -229,11 +236,11 @@ class CalHandler(webapp2.RequestHandler):
                 else:
                     enddate = datetime.date(_thisyear, 12, 31)
             fields = kwargs.get('fields', 'description,items(colorId,creator,description,end,iCalUID,id,location,start,status,summary),nextPageToken,summary')
-            #TODO: only list events from startdate to enddate, using timeMin & timeMax
+            # only list events from startdate to enddate, using timeMin & timeMax
             # https://developers.google.com/google-apps/calendar/v3/reference/events/list
             #   timeMin: string, Lower bound (inclusive) for an event's end time to filter by. Optional. The default is not to filter by end time. Must be an RFC3339 timestamp with mandatory time zone offset, e.g., 2011-06-03T10:00:00-07:00, 2011-06-03T10:00:00Z. Milliseconds may be provided but will be ignored.
             #   timeMax: string, Upper bound (exclusive) for an event's start time to filter by. Optional. The default is not to filter by start time. Must be an RFC3339 timestamp with mandatory time zone offset, e.g., 2011-06-03T10:00:00-07:00, 2011-06-03T10:00:00Z. Milliseconds may be provided but will be ignored.
-            #TODO: add 'maxResults=2500' to make sure we get as much as we can
+            # add 'maxResults=2500' to make sure we get as much as we can
             #   maxResults: integer, Maximum number of events returned on one result page. By default the value is 250 events. The page size can never be larger than 2500 events. Optional.
             timeMin_dt = datetime.datetime.combine(startdate, datetime.datetime.min.time())
             timeMax_dt = datetime.datetime.combine(enddate, datetime.datetime.min.time()) + datetime.timedelta(days=1)

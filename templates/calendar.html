@@ -63,16 +63,17 @@
       </div>
       <hr class="page-break">
       <h1>Details</h1>
-      <button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--accent">
-        Show item list
+      <button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--accent"
+              onclick="var U=document.getElementById('details'); U.hidden = !U.hidden;">
+        Show/hide events
       </button>
 
-      <div id="details">
+      <div id="details" hidden=hidden>
           {% for color, events in calendar.by_color(startdate, enddate).iteritems() %}
           <div class=eventlist style="float:left; width: 10em;">
 
               {%for e in events %}
-              <dl class="dl-horizontal color-event-{{e.items.colorId|default('default')}}">
+              <dl class="event-card dl-horizontal color-event-{{e.items.colorId|default('default')}}">
                   <dt>{{e.startdate}}</dt>
                   <dd>{{e.items.summary|e}}</dd>
               </dl>

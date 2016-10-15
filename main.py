@@ -2,7 +2,7 @@
 # encoding: utf-8
 # The MIT License (MIT)
 
-# Copyright (c) 2014 Håvard Gulldahl
+# Copyright (c) 2014-2016 Håvard Gulldahl
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -24,22 +24,24 @@
 
 # stdlib stuff
 import os.path, logging, httplib2, datetime, calendar
-import collections, copy
+import collections, copy, json
 
 # third party stuff
 # install howto in appengine_requirements.txt
 import dateutil.parser, dateutil.relativedelta
+import requests
+from requests_oauthlib import OAuth1Session
 
 # appengine stuff
 import webapp2, jinja2
 from apiclient.discovery import build
-from google.appengine.ext import webapp
+from google.appengine.api import memcache, users
 from oauth2client.appengine import OAuth2DecoratorFromClientSecrets
-from google.appengine.api import memcache
 from oauth2client.client import AccessTokenRefreshError
+from webapp2_extras import sessions
 	
 # our own stuff
-from models import Color, CalendarPrettyTitle
+from models import Color, CalendarPrettyTitle, UserSetup
 
 JINJA_ENVIRONMENT = jinja2.Environment(
     loader=jinja2.FileSystemLoader(os.path.dirname(__file__)),
@@ -51,8 +53,20 @@ decorator = OAuth2DecoratorFromClientSecrets(
   os.path.join(os.path.dirname(__file__), 'client_secrets.json'),
   scope='https://www.googleapis.com/auth/calendar')
 
+try:
+    with open('trello_secrets.json') as f:
+        trello_secrets = json.load(f)['trello']
+except:
+    trello_secrets = None
+
 http = httplib2.Http(memcache)
 service = build('calendar', 'v3', http=http)
+
+# by default, requests_oauthlib doesnt work on appengine because no socket support
+# use requests_toolbelt and the apppengineadapter to get around this
+#https://toolbelt.readthedocs.io/en/latest/adapters.html#appengineadapter
+from requests_toolbelt.adapters import appengine
+appengine.monkeypatch()
 
 def render_response(template, **context):
     template = JINJA_ENVIRONMENT.get_template(os.path.join('templates', template))
@@ -183,8 +197,24 @@ class YearCalendar(calendar.Calendar):
                     _r[e.colorId] = [e,]
         return _r
 
+class BaseHandler(webapp2.RequestHandler):
+    def dispatch(self):
+        # Get a session store for this request.
+        self.session_store = sessions.get_store(request=self.request)
 
-class CalListHandler(webapp2.RequestHandler):
+        try:
+            # Dispatch the request.
+            webapp2.RequestHandler.dispatch(self)
+        finally:
+            # Save all sessions.
+            self.session_store.save_sessions(self.response)
+
+    @webapp2.cached_property
+    def session(self):
+        # Returns a session using the default cookie key.
+        return self.session_store.get_session()
+
+class CalListHandler(BaseHandler):
     @decorator.oauth_aware
     def get(self):
         def write_auth_view():
@@ -197,6 +227,7 @@ class CalListHandler(webapp2.RequestHandler):
             except AccessTokenRefreshError:
                 # credentials have expired, neeed new auth
                 write_auth_view()
+                return
             for c in cal_list['items']:
                 # do we have a pretty title? Store it.
                 #logging.info(c)
@@ -217,7 +248,7 @@ class CalListHandler(webapp2.RequestHandler):
         else:
             write_auth_view()
 
-class CalHandler(webapp2.RequestHandler):
+class CalHandler(BaseHandler):
     @decorator.oauth_aware
     def get(self, cal_id, startmonth=None, endmonth=None, **kwargs):
         #logging.info("got args: %s %s %s %s", cal_id, startmonth, endmonth, kwargs)
@@ -277,7 +308,7 @@ class CalHandler(webapp2.RequestHandler):
             url = decorator.authorize_url()
             self.response.write(render_response('index.html', calendars=[], authorize_url=url))
 
-class GetColorsHandler(webapp2.RequestHandler):
+class GetColorsHandler(BaseHandler):
     @decorator.oauth_aware
     def get(self):
         if decorator.has_credentials():
@@ -302,7 +333,75 @@ class ColorsCSSHandler(webapp2.RequestHandler):
         self.response.content_type = 'text/css'
         self.response.write(render_response('colors.css', colors=Color.query()))
 
-class MainHandler(webapp2.RequestHandler):
+class TrelloConnectHandler(BaseHandler):
+    def get(self):
+        "Script to obtain an OAuth token from Trello."
+        # have a look at https://github.com/sarumont/py-trello/blob/master/trello/util.py
+        # for inspiration
+        request_token_url = 'https://trello.com/1/OAuthGetRequestToken'
+        authorize_url = 'https://trello.com/1/OAuthAuthorizeToken'
+        expiration = trello_secrets.get('TRELLO_EXPIRATION', "30days")
+        scope = trello_secrets.get('TRELLO_SCOPE', 'read')
+        trello_key = trello_secrets.get('trello_key')
+        trello_secret = trello_secrets.get('trello_secret')
+        name = 'Perpetual Yearcal'
+        
+        session = OAuth1Session(client_key=trello_key, client_secret=trello_secret)
+        response = session.fetch_request_token(request_token_url)
+        resource_owner_key, resource_owner_secret = response.get('oauth_token'), response.get('oauth_token_secret')
+        self.session['oauth_token'] = resource_owner_key
+        self.session['oauth_token_secret'] = resource_owner_secret
+        currentuser = users.get_current_user()
+        logging.debug('current user: %r', vars(currentuser))
+        U = UserSetup.get_by_id(currentuser.email())
+        if U is None: 
+            #not registered before
+            U = UserSetup(id=currentuser.email(), 
+                          user=currentuser)
+            U.put()
+
+        auth_url = "{authorize_url}?oauth_token={oauth_token}&scope={scope}&expiration={expiration}&name={name}&oauth_callback={redirect_url}".format(
+                authorize_url=authorize_url,
+                oauth_token=resource_owner_key,
+                expiration=expiration,
+                scope=scope,
+                name=name,
+                redirect_url='http://localhost:8080/trelloconnected'
+        )
+        #self.response.write(render_response('trelloconnect.html', authorize_url=auth_url))
+        self.redirect(auth_url)
+
+class TrelloConnectedHandler(BaseHandler):
+    "Handler for oauth approved redirects from Trello"
+    def get(self):
+        resource_owner_key = self.session.get('oauth_token')
+        resource_owner_secret = self.session.get('oauth_token_secret')
+        # verify GET variables
+        GET_oauth_token = self.request.get('oauth_token')
+        GET_oauth_verifier = self.request.get('oauth_verifier')
+        if resource_owner_key != GET_oauth_token:
+            logging.error('Oauth key from HTTP GET dont match session key. GET data: %r', GET_oauth_verifier)
+            self.abort(403)
+        access_token_url = 'https://trello.com/1/OAuthGetAccessToken'
+        trello_key = trello_secrets.get('trello_key')
+        trello_secret = trello_secrets.get('trello_secret')
+        session = OAuth1Session(client_key=trello_key, 
+                                client_secret=trello_secret,
+                                resource_owner_key=resource_owner_key, 
+                                resource_owner_secret=resource_owner_secret,
+                                verifier=GET_oauth_verifier)
+        access_token = session.fetch_access_token(access_token_url)
+        currentuser = users.get_current_user()
+        U = UserSetup.get_by_id(currentuser.email())
+        if U is None: 
+            #this smells fishy, should have been created in TrelloConnectHandlerj
+            logging.error('In the middle of Trello oatuh flow, but no existing user found')
+            self.abort(403)
+        U.trello_token = access_token
+        U.put()
+        self.redirect('/')
+         
+class MainHandler(BaseHandler):
     def get(self):
         url = None
         self.response.write(render_response('index.html', calendars=[], authorize_url=url))
@@ -310,14 +409,18 @@ class MainHandler(webapp2.RequestHandler):
 app = webapp2.WSGIApplication([
     ('/', MainHandler),
     ('/cals', CalListHandler),
-
-    #('/cal/<cal_id:[^/]+>/<frommonth:\d{4}_\d{2}>-<tomonth:\d{4}_\d{2}>', CalHandler),
-    #('/cal/<:.*>', CalHandler),
     (r'/cal/([^/]+)/(\d{4}_\d{2})(-\d{4}_\d{2})?', CalHandler),
     (r'/cal/([^/]+)', CalHandler),
     ('/getcolors', GetColorsHandler),
     ('/colors', ColorsHandler, 'colors'),
     ('/colors.css', ColorsCSSHandler, 'colors-css'),
+    ('/trelloconnect', TrelloConnectHandler),
+    ('/trelloconnected', TrelloConnectedHandler),
+    #('/trelloboards', TrelloBoardListHandler),
+    #(r'/trelloboard/([^/]+)', TrelloBoardHandler),
     (decorator.callback_path, decorator.callback_handler()),
 
-], debug=False)
+], debug=False, 
+config={'webapp2_extras.sessions':{
+    'secret_key': trello_secrets.get('perpetual_key'),
+}})

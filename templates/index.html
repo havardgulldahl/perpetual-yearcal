@@ -17,23 +17,43 @@
         </h1>
         {% if calendars|length == 0 %}
           {% if authorize_url %}
-          <b>not authorized yet</b>
-            <a class="title" title="Grant read access to your calendars" href="{{ authorize_url }}">Grant Access</a>
+            <p>
+              <b>Hello</b>, we need to be allowed to list your calendars :)
+              <a class="title" title="Grant read access to your calendars" href="{{ authorize_url }}">I'll allow access</a>
+            </p>
           {% else %}
-            no calendars found
-            <a class="title" href="/cals">Log in and show calendars</a>
+            <p>
+              <b>Crikey</b>, we found no calendars to show you.
+              <a class="title" href="/cals">Log in and get calendars</a>
+            </p>
           {% endif %}
         {% else %}
-        <ul id="calendars" class="mdl-list">
-          {% for cal in calendars %}
-          <li class="mdl-list__item {{ cal.status }}">
-            <span class="mdl-list__item-primary-content">
-              <i class="material-icons mdl-list__item-icon">event</i>
-              <a class="title" href="/cal/{{ cal.id }}" title="{{ cal.id }}">{{ cal.summaryOverride or cal.summary  }}</a>
-            </span>
-          </li>
-          {% endfor %}
-        </ul>
+          <ul id="calendars" class="mdl-list">
+            {% for cal in calendars %}
+            <li class="mdl-list__item {{ cal.status }}">
+              <div class="mdl-list__item-primary-content">
+                <i class="material-icons mdl-list__item-icon">event</i>
+                <a class="title" href="/cal/{{ cal.id }}" title="{{ cal.id }}">{{ cal.summaryOverride or cal.summary  }}</a>
+              </div>
+            </li>
+            {% endfor %}
+          </ul>
+          <h2>Trello boards</h2>
+          {% if trelloboards|length == 0 %}
+            <p>You should go ahead and <a href="/trelloconnect">list your trello boards here!</a></p>
+          {% else %}
+            
+            <ul id="trelloboards" class="mdl-list">
+              {% for board in trelloboards %}
+              <li class="mdl-list__item {{ cal.status }}">
+                <div class="mdl-list__item-primary-content">
+                  <i class="material-icons mdl-list__item-icon">event</i>
+                  <a class="title" href="/trelloboard/{{ cal.id }}" title="{{ trello.id }}">{{ cal.summaryOverride or cal.summary  }}</a>
+                </div>
+              </li>
+              {% endfor %}
+            </ul>
+          {% endif %}
         {% endif %}
       </div> <!-- /class mdl-grid -->
 

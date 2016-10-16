@@ -55,6 +55,7 @@ docs/_build/
 # PyBuilder
 target/
 client_secrets.json
+trello_secrets.json
 
 #imports
 apiclient/

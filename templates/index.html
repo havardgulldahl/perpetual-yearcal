@@ -45,10 +45,10 @@
             
             <ul id="trelloboards" class="mdl-list">
               {% for board in trelloboards %}
-              <li class="mdl-list__item {{ cal.status }}">
+              <li class="mdl-list__item {{ board.status }}">
                 <div class="mdl-list__item-primary-content">
                   <i class="material-icons mdl-list__item-icon">event</i>
-                  <a class="title" href="/trelloboard/{{ cal.id }}" title="{{ trello.id }}">{{ cal.summaryOverride or cal.summary  }}</a>
+                  <a class="title" href="/trelloboard/{{ board.id }}" title="{{ board.client }}">{{ board.description or board.name  }}</a>
                 </div>
               </li>
               {% endfor %}

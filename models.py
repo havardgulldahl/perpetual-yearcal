@@ -37,6 +37,7 @@ class CalendarPrettyTitle(ndb.Model):
 
 class UserSetup(ndb.Model):
   user = ndb.UserProperty()
+  google_token = ndb.JsonProperty()
   trello_token = ndb.JsonProperty() # oauth1 access token dict, where .keys() == ('oauth_token', 'oauth_token_secret')
   timestamp = ndb.DateTimeProperty(auto_now=True)
   

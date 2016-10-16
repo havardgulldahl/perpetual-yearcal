@@ -31,6 +31,7 @@ import collections, copy, json
 import dateutil.parser, dateutil.relativedelta
 import requests
 from requests_oauthlib import OAuth1Session
+from trello import TrelloClient, Unauthorized, ResourceUnavailable
 
 # appengine stuff
 import webapp2, jinja2
@@ -217,6 +218,7 @@ class BaseHandler(webapp2.RequestHandler):
 class CalListHandler(BaseHandler):
     @decorator.oauth_aware
     def get(self):
+        logging.info('callisthandler has credentials: %r', decorator.has_credentials())
         def write_auth_view():
             url = decorator.authorize_url()
             self.response.write(render_response('index.html', calendars=[], authorize_url=url))
@@ -243,8 +245,23 @@ class CalListHandler(BaseHandler):
                     CPT.put()
                 except Exception as e:
                     logging.exception(e)
-
-            self.response.write(render_response('index.html', calendars=cal_list['items']))
+            boards = []
+            currentuser = users.get_current_user()
+            U = UserSetup.get_by_id(currentuser.email())
+            if U is not None and U.trello_token:
+                logging.info('trelloboardlist token :%r', U.trello_token)
+                trello_client = TrelloClient(
+                    api_key=trello_secrets.get('trello_key'),
+                    api_secret=trello_secrets.get('trello_secret'),
+                    token=U.trello_token.get('oauth_token'),
+                    token_secret=U.trello_token.get('oauth_token_secret')
+                )
+                boards = trello_client.list_boards(board_filter="open")
+                
+            self.response.write(render_response('index.html', 
+                                calendars=cal_list['items'],
+                                trelloboards=boards,
+            ))
         else:
             write_auth_view()
 
@@ -401,9 +418,26 @@ class TrelloConnectedHandler(BaseHandler):
         U.put()
         self.redirect('/')
          
+class TrelloBoardListHandler(BaseHandler):
+    def get(self):         
+        currentuser = users.get_current_user()
+        U = UserSetup.get_by_id(currentuser.email())
+        if U is not None and U.trello_token:
+            logging.info('trelloboardlist token :%r', U.trello_token)
+            
+
+class TrelloBoardHandler(BaseHandler):
+    def get(self):         
+        currentuser = users.get_current_user()
+        U = UserSetup.get_by_id(currentuser.email())
+        if U is not None and U.trello_token:
+            logging.info('trelloboard token :%r', U.trello_token)
+            
+
 class MainHandler(BaseHandler):
     def get(self):
         url = None
+        logging.info('has credentials: %r', decorator.has_credentials())
         self.response.write(render_response('index.html', calendars=[], authorize_url=url))
 
 app = webapp2.WSGIApplication([
@@ -416,8 +450,8 @@ app = webapp2.WSGIApplication([
     ('/colors.css', ColorsCSSHandler, 'colors-css'),
     ('/trelloconnect', TrelloConnectHandler),
     ('/trelloconnected', TrelloConnectedHandler),
-    #('/trelloboards', TrelloBoardListHandler),
-    #(r'/trelloboard/([^/]+)', TrelloBoardHandler),
+    ('/boards', TrelloBoardListHandler),
+    (r'/board/([^/]+)', TrelloBoardHandler),
     (decorator.callback_path, decorator.callback_handler()),
 
 ], debug=False, 

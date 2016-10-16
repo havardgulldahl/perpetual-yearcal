@@ -418,21 +418,21 @@ class TrelloConnectedHandler(BaseHandler):
         U.put()
         self.redirect('/')
          
-class TrelloBoardListHandler(BaseHandler):
-    def get(self):         
-        currentuser = users.get_current_user()
-        U = UserSetup.get_by_id(currentuser.email())
-        if U is not None and U.trello_token:
-            logging.info('trelloboardlist token :%r', U.trello_token)
-            
-
 class TrelloBoardHandler(BaseHandler):
-    def get(self):         
+    def get(self, board_id):         
         currentuser = users.get_current_user()
         U = UserSetup.get_by_id(currentuser.email())
         if U is not None and U.trello_token:
             logging.info('trelloboard token :%r', U.trello_token)
-            
+            trello_client = TrelloClient(
+                api_key=trello_secrets.get('trello_key'),
+                api_secret=trello_secrets.get('trello_secret'),
+                token=U.trello_token.get('oauth_token'),
+                token_secret=U.trello_token.get('oauth_token_secret')
+            )
+            board = trello_client.get_board(board_id)
+            self.response.write(vars(board))
+                          
 
 class MainHandler(BaseHandler):
     def get(self):
@@ -450,7 +450,7 @@ app = webapp2.WSGIApplication([
     ('/colors.css', ColorsCSSHandler, 'colors-css'),
     ('/trelloconnect', TrelloConnectHandler),
     ('/trelloconnected', TrelloConnectedHandler),
-    ('/boards', TrelloBoardListHandler),
+    #('/boards', TrelloBoardListHandler),
     (r'/board/([^/]+)', TrelloBoardHandler),
     (decorator.callback_path, decorator.callback_handler()),
 

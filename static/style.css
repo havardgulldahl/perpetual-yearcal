@@ -16,6 +16,9 @@ body h1 {
 	.numbering {
 		page-break-after: avoid;
 	}
+	.mdl-button {
+		display: none;
+	}
 }
 
 .trow {
@@ -49,7 +52,7 @@ span.day {
 
 .weekday-6, .weekday-7 {
 	/* saturday and sunday */
-	background: #eee;
+	background: #eee!important;
 	z-index: 0;
 
 }

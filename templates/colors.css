@@ -9,7 +9,7 @@
 }
 {%endfor%}
 .color-event-default, .color-calendar-default {
-	background:#dedee6;
+	background:#dedee6!important;
 	color:black;
 	border-color: blueviolet;
 }
